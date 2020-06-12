@@ -1,0 +1,12 @@
+Trucs a regarder :
+
+C++ / OpenGL
+Java / LWJGL
+=> LWJGL 3 est plus compliqué, mais plus performant
+LWJGL 2 est + simple à utiliser
+
+Libs:
+OpenGL, Vulkan
+
+Engines :
+godot, panda3D, ogre
