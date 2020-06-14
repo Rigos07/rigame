@@ -10,3 +10,8 @@ OpenGL, Vulkan
 
 Engines :
 godot, panda3D, ogre
+
+
+Commentaires :
+
+OpenGL supporte mal les images qui n'ont pas une taille en puissance de 2.
