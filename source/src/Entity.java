@@ -10,22 +10,26 @@ import org.newdawn.slick.opengl.TextureLoader;
 
 public abstract class Entity {
 	private Texture texture;
-	protected int xPos;
-	protected int yPos;
+	protected double xPos;
+	protected double yPos;
 	private int width;
 	private int height;
 	private int textureWidth;
 	private int textureHeight;
+	private int textureTotalWidth;
+	private int textureTotalHeight;
 	
-	public Entity(String texturePath, int sizeX, int sizeY) {
+	public Entity(String texturePath, int sizeX, int sizeY, int textureX, int textureY) {
 		this.xPos = 0;
 		this.yPos = 0;
 		this.width = sizeX;
 		this.height = sizeY;
+		this.textureWidth = textureX;
+		this.textureHeight = textureY;
 		try {
 			this.texture = TextureLoader.getTexture("PNG", new FileInputStream(new File(texturePath)));
-			this.textureWidth = texture.getImageWidth();
-			this.textureHeight = texture.getImageHeight();
+			this.textureTotalWidth = texture.getImageWidth();
+			this.textureTotalHeight = texture.getImageHeight();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -33,11 +37,11 @@ public abstract class Entity {
 		}
 	}
 	
-	public int getXPos() {
+	public double getXPos() {
 		return this.xPos;
 	}
 	
-	public int getYPos() {
+	public double getYPos() {
 		return this.yPos;
 	}
 	
@@ -49,16 +53,34 @@ public abstract class Entity {
 		return this.height;
 	}
 	
+	public int getCenterX() {
+		return this.width/2;
+	}
+	
+	public int getCenterY() {
+		return this.height/2;
+	}
+	
 	public void setPos(int x, int y) {
 		this.xPos = x;
 		this.yPos = y;
 	}
 	
-	public void setTexture(String texturePath) {
+	public void setSize(int x, int y) {
+		this.width = x;
+		this.height = y;
+	}
+	
+	public void setTexture(String texturePath, int sizeX, int sizeY) {
 		try {
-			this.texture = TextureLoader.getTexture("PNG", new FileInputStream(new File(texturePath)));
-			this.textureWidth = texture.getImageWidth();
-			this.textureHeight = texture.getImageHeight();
+			Texture newTexture = TextureLoader.getTexture("PNG", new FileInputStream(new File(texturePath)));
+			this.texture.release();
+			this.texture = newTexture;
+			this.textureWidth = sizeX;
+			this.textureHeight = sizeY;
+			this.textureTotalWidth = texture.getImageWidth();
+			this.textureTotalHeight = texture.getImageHeight();
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -86,7 +108,7 @@ public abstract class Entity {
 		
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
-		glBegin(GL_TRIANGLES);
+		/*glBegin(GL_TRIANGLES);
 		{
 		glTexCoord2f((float) width/textureWidth, 0);
 		glVertex2i(xPos + width, yPos);
@@ -102,19 +124,20 @@ public abstract class Entity {
 		glTexCoord2f((float) width/textureWidth, 0);
 		glVertex2i(xPos + width, yPos);
 		}
-		glEnd();
-		/*glBegin(GL_QUADS);
-		{
-		glTexCoord2f(0, 0);
-		glVertex2i(xPos, yPos);
-		glTexCoord2f(0, (float) height/textureHeight);
-		glVertex2i(xPos + width, yPos);
-		glTexCoord2f((float) width/textureWidth, (float) height/textureHeight);
-		glVertex2i(xPos + width, yPos + height);
-		glTexCoord2f((float) width/textureWidth, 0);
-		glVertex2i(xPos, yPos + height);
-		}
 		glEnd();*/
+		glBegin(GL_QUADS);
+		double xratio = ((double) this.textureWidth)/ ((double) this.textureTotalWidth), yratio = ((double) this.textureHeight)/((double) this.textureTotalHeight);
+		{
+		glTexCoord2d(xratio, 0);
+		glVertex2d(xPos + width, yPos);
+		glTexCoord2d(xratio, yratio);
+		glVertex2d(xPos + width, yPos + height);
+		glTexCoord2d(0, yratio);
+		glVertex2d(xPos, yPos + height);
+		glTexCoord2d(0, 0);
+		glVertex2d(xPos, yPos);
+		}
+		glEnd();
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDisable(GL_TEXTURE_2D);
 	}
