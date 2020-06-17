@@ -7,9 +7,8 @@ import static org.lwjgl.opengl.GL11.*;
 import java.util.ArrayList;
 
 /*
- * TODO: Mieux gérer les sauts
+ * TODO: Mieux gérer les sauts et collisions
  * TODO: Génération du terrain (mieux qu'un for)
- * TODO: Gérer les collisions + proprement
  * TODO: Menus
  * TODO: Gérer les sprites/animations
  * 
@@ -22,13 +21,46 @@ public class Game {
 	private int windowHeight;
 	private GameState state;
 	private Background background;
-	private ArrayList<Entity> entities;
-	//private boolean jump;
+	private ArrayList<Bloc> blocs;
+	private boolean jump;
 	
 	public Game(int x, int y) {
 		this.windowWidth = x;
 		this.windowHeight = y;
 		this.state = GameState.INTRO;
+	}
+	
+	public void controls4Directions() {
+		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+			player.addForce(new Vector(1,0));
+		} if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+			player.addForce(new Vector(-1,0));
+		} if(Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+			player.addForce(new Vector(0,-1));
+		} if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+			player.addForce(new Vector(0,1));
+		}
+	}
+	
+	public void controls2Directions() {
+		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+			player.addForce(new Vector(1,0));
+		} if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+			player.addForce(new Vector(-1,0));
+		} if(Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+			if(!this.jump && player.isOnGround()) {
+				player.addForce(new Vector(0,-15));
+				this.jump = true;
+			}
+		} if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+			player.addForce(new Vector(0,1));
+		}
+	}
+	
+	public void drawGame() {
+		background.draw();
+		for(Bloc bloc : blocs) bloc.draw();		
+		player.draw();
 	}
 	
 	public void init() {
@@ -59,11 +91,12 @@ public class Game {
         glMatrixMode(GL_MODELVIEW);
         
         this.state = GameState.INTRO;
-		this.entities = new ArrayList<Entity>();
+		this.blocs = new ArrayList<Bloc>();
 		//player = new Player("textures/sonocLarge.png", 150, 118);
-        player = new Player("textures/player.png", 128, 128, 128, 128);
+        player = new Player("textures/player.png", 64, 64, 128, 128);
         //entities.add(player);
 		background = new Background("textures/background.png", windowWidth, windowHeight, windowWidth, windowHeight);
+		//jump = false;
 	}
 	
 	public void run() {
@@ -72,11 +105,22 @@ public class Game {
 		/*Bloc bloc = new Bloc("textures/bloc.png", 64, 64);
 		entities.add(bloc);
 		bloc.setPos(400, 250);*/
-		for(int i = 0 ; i < 10 ; i++) {
+		/*for(int i = 0 ; i < 8 ; i++) {
 			Bloc b = new Bloc("textures/bloc.png", 64, 64, 64, 64);
-			b.setPos(i*64, 300);
-			entities.add(b);
+			b.setPos(i*64, 200);
+			blocs.add(b);
+			if(i == 4 || i == 7) {
+				Bloc b2 = new Bloc("textures/bloc.png", 64, 64, 64, 64);
+				b2.setPos(i*64, 136);
+				blocs.add(b2);
+			}
 		}
+		
+		for(int i = 2 ; i < 10 ; i++) {
+			Bloc b = new Bloc("textures/bloc.png", 64, 64, 64, 64);
+			b.setPos((i)*64, 350);
+			blocs.add(b);
+		}*/
 		
 		while(!Display.isCloseRequested()) {
 			switch(this.state) {
@@ -103,42 +147,58 @@ public class Game {
 					break;
 				case GAME:
 					//while (Keyboard.next()) {
-					if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-						player.addForce(new Vector(1,0));
-					} if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-						player.addForce(new Vector(-1,0));
-					} if(Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-						player.addForce(new Vector(0,-4));
-					} if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-						player.addForce(new Vector(0,1));
-					} if(Keyboard.isKeyDown(Keyboard.KEY_R)) {
+					this.controls2Directions();
+					if(Keyboard.isKeyDown(Keyboard.KEY_R)) {
 						player.setPos(10, 10);
-						player.setForce(new Vector());
+						player.setForce(0,0);
 					}
 				//}
-				
-				player.addForce(new Vector(0,3)); //Gravity
-				
-				for(Entity bloc : entities) {
+
+
+				/*for(Bloc bloc : blocs) {
 					if(player.isColliding(bloc)) {
 						bloc.setTexture("./textures/bloc2.png", 64, 64);
-						player.addForce(new Vector(0,-player.getVector().getY()));
-						//jump = false;
+						player.addCollision(bloc);
+						//player.setOnGround(true);
+						jump = false;
+						player.jump = false;
+						//inAir = false;
 					} else {
 						bloc.setTexture("./textures/bloc.png", 64, 64);
 					}
-				}
+				}*/
+				
+				/*if(inAir) {
+					player.setOnGround(false);
+				}*/
+				
+				/*if(!jump) {
+					player.addForce(new Vector(500,500));
+					jump = true;
+				}*/
+				
+				// Keep player inside the map
+				double nextX = player.getXPos() + player.getdx(), nextY = player.getYPos() + player.getdy();
+				if(nextX < 0 || nextX + player.getWidth() > background.getWidth()) player.setForce(-player.getdx(), player.getdy());
+				if(nextY < 0 || nextY + player.getHeight() > background.getHeight()) {
+					if(nextY + player.getHeight() > background.getHeight()) {
+						this.jump = false;
+						player.setOnGround(true);
+					}
+					
+					player.setForce(player.getdx(), -player.getdy());
+				} 
+				
+				if(nextY + player.getHeight() < background.getHeight()) player.setOnGround(false);
+	
+				
+				player.update(background);
 				
 				
 				
-				if(!player.isColliding(background)) {
-					player.setForce(new Vector());
-				}
+				//System.out.println(player.getdx() + " , " + player.getdy() + " / jump = " + player.jump + "/ ground = " + player.isOnGround());
 				
-				background.draw();
-				for(Entity bloc : entities) bloc.draw();
-				player.moveV();
-				player.draw();
+				this.drawGame();
 				break;
 			}
 			

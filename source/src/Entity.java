@@ -61,7 +61,7 @@ public abstract class Entity {
 		return this.height/2;
 	}
 	
-	public void setPos(int x, int y) {
+	public void setPos(double x, double y) {
 		this.xPos = x;
 		this.yPos = y;
 	}
@@ -97,6 +97,17 @@ public abstract class Entity {
 			collision = true;
 		}
 		return collision;
+	}
+	
+	public boolean isContainedBy(Entity e) {
+		boolean contained = false,
+		        horizontalContained = (this.xPos >= e.xPos && e.xPos + e.getWidth() >= this.xPos + this.width),
+		        verticalContained = (this.yPos >= e.xPos && e.yPos + e.getHeight() >= this.yPos + this.height);
+		
+		if (horizontalContained && verticalContained) {
+			contained = true;
+		}
+		return contained;
 	}
 	
 	public void move(int x, int y) {
